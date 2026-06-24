@@ -23,25 +23,33 @@ export function mediaTypeFromMime(mime: string): "image" | "video" {
 }
 
 /**
- * Ensure the `media` Supabase storage bucket exists. Safe to call repeatedly —
- * "already exists" errors from Supabase are swallowed.
+ * Ensure the `media` Supabase storage bucket exists. Safe to call repeatedly.
+ * First checks via listBuckets so we don't try to create on every upload;
+ * if creation fails for a non-"exists" reason, throws — silent failure here
+ * is the difference between "uploads work" and "uploads fail with a confusing
+ * 'related resource does not exist' error downstream."
  */
 async function ensureMediaBucket(): Promise<void> {
   const svc = createSupabaseServiceClient();
+  const { data: buckets, error: listErr } = await svc.storage.listBuckets();
+  if (!listErr && buckets?.some((b) => b.name === MEDIA_BUCKET)) return;
+
   const { error } = await svc.storage.createBucket(MEDIA_BUCKET, {
     public: false,
     fileSizeLimit: "1024MiB",
     allowedMimeTypes: [...ALLOWED_MIMES],
   });
-  if (error) {
-    const msg = (error.message ?? "").toLowerCase();
-    if (msg.includes("already exists") || msg.includes("duplicate")) return;
-    // Some Supabase versions return a generic 409; treat any "exists" hint as ok.
-    if (msg.includes("exists")) return;
-    // Don't throw — the caller may still succeed if the bucket is in fact present
-    // (e.g., RLS prevented the inspection). Log for visibility.
-    console.warn(`ensureMediaBucket: ${error.message}`);
+  if (!error) return;
+  const msg = (error.message ?? "").toLowerCase();
+  if (msg.includes("already exists") || msg.includes("duplicate") || msg.includes("exists")) {
+    return;
   }
+  // Surface the real reason instead of letting the next call fail with
+  // "The related resource does not exist".
+  throw new Error(
+    `Could not create the 'media' Supabase Storage bucket: ${error.message}. ` +
+      `Create it manually in the Supabase dashboard (Storage → New bucket → name 'media', private, 1024 MiB).`,
+  );
 }
 
 function extFromName(name: string, fallback: string): string {
