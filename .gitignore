@@ -28,3 +28,4 @@ apps/player/android/.gradle/
 apps/player/android/build/
 coverage/
 .cache/
+apps/web/tsconfig.tsbuildinfo
