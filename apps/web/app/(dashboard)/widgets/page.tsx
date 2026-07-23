@@ -1,18 +1,24 @@
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/rbac";
-import { createWeatherWidgetForm, createNewsWidgetForm } from "./actions";
+import {
+  createWeatherWidgetForm,
+  createNewsWidgetForm,
+  createSportsWidgetForm,
+} from "./actions";
 import {
   weatherConfigSchema,
   newsConfigSchema,
+  sportsConfigSchema,
   type WeatherConfig,
   type NewsConfig,
+  type SportsConfig,
 } from "@drip-tv/shared";
 
 type WidgetRow = {
   id: string;
   name: string;
-  type: "weather" | "news";
+  type: "weather" | "news" | "sports";
   config: unknown;
   updated_at: string | null;
 };
@@ -24,6 +30,12 @@ function summarize(row: WidgetRow): string {
     const c: WeatherConfig = parsed.data;
     const loc = c.zip ? `ZIP ${c.zip} (${c.country})` : "lat/lon";
     return `${loc} · ${c.units === "metric" ? "°C" : "°F"}${c.showForecast ? " · forecast" : ""}`;
+  }
+  if (row.type === "sports") {
+    const parsed = sportsConfigSchema.safeParse(row.config);
+    if (!parsed.success) return "Invalid config";
+    const c: SportsConfig = parsed.data;
+    return c.team ? `${c.league} · ${c.team}` : `${c.league} · league results`;
   }
   const parsed = newsConfigSchema.safeParse(row.config);
   if (!parsed.success) return "Invalid config";
@@ -55,13 +67,13 @@ export default async function WidgetsPage() {
     <div className="p-8">
       <header className="mb-8">
         <p className="font-heading text-h5 uppercase tracking-[1px] text-maroon">Widgets</p>
-        <h1 className="mt-1 text-h3 font-black text-paua">Weather and news cards</h1>
+        <h1 className="mt-1 text-h3 font-black text-paua">Weather, news, and sports cards</h1>
         <p className="mt-2 max-w-2xl text-body text-ink/70">
-          Drop these into a display to show live conditions or rotating headlines.
+          Drop these into a display to show live conditions, rotating headlines, or league scores.
         </p>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-lg bg-white p-6 shadow-sm">
           <h2 className="font-heading text-h4 uppercase tracking-[1px] text-paua">New weather widget</h2>
           <form action={createWeatherWidgetForm} className="mt-4 space-y-4">
@@ -135,6 +147,49 @@ export default async function WidgetsPage() {
               </div>
             </div>
             <button type="submit" className={BTN_PRIMARY}>Create news widget</button>
+          </form>
+        </div>
+
+        <div className="rounded-lg bg-white p-6 shadow-sm">
+          <h2 className="font-heading text-h4 uppercase tracking-[1px] text-paua">New sports widget</h2>
+          <form action={createSportsWidgetForm} className="mt-4 space-y-4">
+            <div>
+              <label className={LABEL} htmlFor="s-name">Name</label>
+              <input id="s-name" name="name" required className={INPUT} defaultValue="Scoreboard" />
+            </div>
+            <div>
+              <label className={LABEL} htmlFor="s-league">League</label>
+              <input
+                id="s-league"
+                name="league"
+                required
+                className={INPUT}
+                placeholder="English Premier League"
+              />
+              <p className="mt-1 text-xs text-ink/60">
+                Full league name as listed by TheSportsDB (e.g. &quot;NBA&quot;, &quot;NFL&quot;, &quot;English Premier League&quot;).
+              </p>
+            </div>
+            <div>
+              <label className={LABEL} htmlFor="s-team">Team (optional)</label>
+              <input
+                id="s-team"
+                name="team"
+                className={INPUT}
+                placeholder="Arsenal"
+              />
+              <p className="mt-1 text-xs text-ink/60">
+                Leave blank for recent league results, or specify a team for their next fixtures.
+              </p>
+            </div>
+            <div>
+              <label className={LABEL} htmlFor="s-units">Units</label>
+              <select id="s-units" name="units" className={INPUT} defaultValue="imperial">
+                <option value="imperial">Imperial</option>
+                <option value="metric">Metric</option>
+              </select>
+            </div>
+            <button type="submit" className={BTN_PRIMARY}>Create sports widget</button>
           </form>
         </div>
       </section>

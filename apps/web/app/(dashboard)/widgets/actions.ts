@@ -1,7 +1,12 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/rbac";
-import { weatherConfigSchema, newsConfigSchema, widgetConfigSchema } from "@drip-tv/shared";
+import {
+  weatherConfigSchema,
+  newsConfigSchema,
+  sportsConfigSchema,
+  widgetConfigSchema,
+} from "@drip-tv/shared";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -46,6 +51,25 @@ export async function createNewsWidget(name: string, config: unknown): Promise<v
       org_id: orgId,
       name: name.trim() || "News",
       type: "news",
+      config: parsed,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/widgets");
+  redirect(`/widgets/${data.id}`);
+}
+
+export async function createSportsWidget(name: string, config: unknown): Promise<void> {
+  const parsed = sportsConfigSchema.parse(config);
+  const { user, supabase } = await requireUser();
+  const orgId = await currentOrgId(supabase, user.id);
+  const { data, error } = await supabase
+    .from("widgets")
+    .insert({
+      org_id: orgId,
+      name: name.trim() || "Sports",
+      type: "sports",
       config: parsed,
     })
     .select("id")
@@ -118,6 +142,19 @@ export async function createNewsWidgetForm(formData: FormData): Promise<void> {
   });
 }
 
+export async function createSportsWidgetForm(formData: FormData): Promise<void> {
+  const name = String(formData.get("name") ?? "Sports");
+  const league = String(formData.get("league") ?? "").trim();
+  const teamRaw = String(formData.get("team") ?? "").trim();
+  const units = String(formData.get("units") ?? "imperial") === "metric" ? "metric" : "imperial";
+  await createSportsWidget(name, {
+    kind: "sports",
+    league,
+    team: teamRaw || undefined,
+    units,
+  });
+}
+
 export async function updateWidgetForm(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("id is required");
@@ -131,6 +168,18 @@ export async function updateWidgetForm(formData: FormData): Promise<void> {
       country: String(formData.get("country") ?? "US").trim() || "US",
       units: String(formData.get("units") ?? "imperial") === "metric" ? "metric" : "imperial",
       showForecast: formData.get("showForecast") === "on",
+    };
+    await updateWidget(id, { name, config });
+    return;
+  }
+
+  if (kind === "sports") {
+    const teamRaw = String(formData.get("team") ?? "").trim();
+    const config = {
+      kind: "sports" as const,
+      league: String(formData.get("league") ?? "").trim(),
+      team: teamRaw || undefined,
+      units: String(formData.get("units") ?? "imperial") === "metric" ? "metric" : "imperial",
     };
     await updateWidget(id, { name, config });
     return;

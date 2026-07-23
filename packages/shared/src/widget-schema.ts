@@ -21,13 +21,22 @@ export const newsConfigSchema = z.object({
   rotateSec: z.number().int().positive().default(8),
 });
 
+export const sportsConfigSchema = z.object({
+  kind: z.literal("sports"),
+  league: z.string().min(1),
+  team: z.string().optional(),
+  units: z.enum(["imperial", "metric"]).default("imperial"),
+});
+
 export const widgetConfigSchema = z.discriminatedUnion("kind", [
   weatherConfigSchema,
   newsConfigSchema,
+  sportsConfigSchema,
 ]);
 
 export type WeatherConfig = z.infer<typeof weatherConfigSchema>;
 export type NewsConfig = z.infer<typeof newsConfigSchema>;
+export type SportsConfig = z.infer<typeof sportsConfigSchema>;
 export type WidgetConfig = z.infer<typeof widgetConfigSchema>;
 
 export const weatherPayloadSchema = z.object({
@@ -53,5 +62,28 @@ export const newsPayloadSchema = z.object({
   expires_at: z.string(),
 });
 
+export const sportsEventSchema = z.object({
+  id: z.string(),
+  home: z.string(),
+  away: z.string(),
+  homeScore: z.number().nullable(),
+  awayScore: z.number().nullable(),
+  date: z.string(),
+  status: z.enum(["scheduled", "final"]),
+});
+
+export const sportsPayloadSchema = z.object({
+  kind: z.literal("sports"),
+  league: z.string(),
+  team: z.string().nullable(),
+  mode: z.enum(["recent", "next"]),
+  events: z.array(sportsEventSchema),
+  warning: z.string().optional(),
+  fetched_at: z.string(),
+  expires_at: z.string(),
+});
+
 export type WeatherPayload = z.infer<typeof weatherPayloadSchema>;
 export type NewsPayload = z.infer<typeof newsPayloadSchema>;
+export type SportsEvent = z.infer<typeof sportsEventSchema>;
+export type SportsPayload = z.infer<typeof sportsPayloadSchema>;
