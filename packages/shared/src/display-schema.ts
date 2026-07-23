@@ -2,6 +2,19 @@ import { z } from "zod";
 
 export const aspectRatioSchema = z.enum(["16:9", "9:16"]);
 
+// Sports leagues supported by the sports zone. When a sports zone is toggled
+// on with no specific leagues selected, ALL of these are shown by default.
+export const SPORTS_LEAGUES = [
+  "NFL",
+  "NBA",
+  "MLB",
+  "NHL",
+  "PGA",
+  "NASCAR",
+] as const;
+export const sportsLeagueSchema = z.enum(SPORTS_LEAGUES);
+export type SportsLeague = (typeof SPORTS_LEAGUES)[number];
+
 export const zoneContentSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("media"),
@@ -10,7 +23,20 @@ export const zoneContentSchema = z.discriminatedUnion("kind", [
     muted: z.boolean().default(true),
   }),
   z.object({ kind: z.literal("playlist"), playlistId: z.string().uuid() }),
-  z.object({ kind: z.literal("widget"), widgetId: z.string().uuid() }),
+  // Weather resolves its location from the device's assigned location at
+  // render time — no zip is stored on the zone itself.
+  z.object({
+    kind: z.literal("weather"),
+    units: z.enum(["imperial", "metric"]).default("imperial"),
+    showForecast: z.boolean().default(true),
+  }),
+  // Sports is a simple on toggle. Empty `leagues` means "all default leagues".
+  // Advanced users can narrow to specific leagues and/or teams.
+  z.object({
+    kind: z.literal("sports"),
+    leagues: z.array(sportsLeagueSchema).default([]),
+    teams: z.array(z.string()).default([]),
+  }),
   z.object({
     kind: z.literal("text"),
     text: z.string(),

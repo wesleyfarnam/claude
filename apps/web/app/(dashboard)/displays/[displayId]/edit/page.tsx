@@ -3,10 +3,7 @@ import { displaySchema, type Display } from "@drip-tv/shared";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/rbac";
 import { BuilderShell } from "@/components/builder/BuilderShell";
-import type {
-  MediaPickerItem,
-  WidgetPickerItem,
-} from "@/components/builder/MediaPickerModal";
+import type { MediaPickerItem } from "@/components/builder/MediaPickerModal";
 
 export default async function DisplayEditPage({
   params,
@@ -46,17 +43,13 @@ export default async function DisplayEditPage({
         zones: [],
       };
 
-  const [mediaResult, widgetsResult] = await Promise.all([
-    supabase
-      .from("media_assets")
-      .select("id, name, type, thumb_path")
-      .eq("status", "ready")
-      .order("created_at", { ascending: false }),
-    supabase.from("widgets").select("id, name, type").order("name"),
-  ]);
+  const mediaResult = await supabase
+    .from("media_assets")
+    .select("id, name, type, thumb_path")
+    .eq("status", "ready")
+    .order("created_at", { ascending: false });
 
   const media: MediaPickerItem[] = (mediaResult.data ?? []) as MediaPickerItem[];
-  const widgets: WidgetPickerItem[] = (widgetsResult.data ?? []) as WidgetPickerItem[];
 
-  return <BuilderShell initialDisplay={initialDisplay} media={media} widgets={widgets} />;
+  return <BuilderShell initialDisplay={initialDisplay} media={media} />;
 }

@@ -7,16 +7,14 @@ import { saveDisplay } from "@/app/(dashboard)/displays/actions";
 import { Canvas } from "./Canvas";
 import { Toolbox } from "./Toolbox";
 import { Inspector } from "./Inspector";
-import type { MediaPickerItem, WidgetPickerItem } from "./MediaPickerModal";
+import type { MediaPickerItem } from "./MediaPickerModal";
 
 export function BuilderShell({
   initialDisplay,
   media,
-  widgets,
 }: {
   initialDisplay: Display;
   media: MediaPickerItem[];
-  widgets: WidgetPickerItem[];
 }) {
   const display = useBuilderStore((s) => s.display);
   const dirty = useBuilderStore((s) => s.dirty);
@@ -100,7 +98,7 @@ export function BuilderShell({
         </div>
       </header>
       <div className="flex flex-1 overflow-hidden">
-        <Toolbox media={media} widgets={widgets} />
+        <Toolbox media={media} />
         <Canvas />
         <Inspector />
       </div>

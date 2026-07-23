@@ -16,6 +16,8 @@ type LocationDetail = {
   name: string;
   address: string | null;
   timezone: string;
+  postal_code: string | null;
+  country_code: string | null;
   org_id: string;
 };
 
@@ -57,7 +59,7 @@ export default async function LocationDetailPage({
 
   const { data: locData, error: locErr } = await supabase
     .from("locations")
-    .select("id, name, address, timezone, org_id")
+    .select("id, name, address, timezone, postal_code, country_code, org_id")
     .eq("id", locationId)
     .maybeSingle();
 
@@ -104,6 +106,15 @@ export default async function LocationDetailPage({
             )}
             <span className="mx-2 text-ink/30">•</span>
             <span className="font-mono text-sm">{location.timezone}</span>
+            {location.postal_code ? (
+              <>
+                <span className="mx-2 text-ink/30">•</span>
+                <span className="font-mono text-sm">
+                  {location.postal_code}
+                  {location.country_code ? ` ${location.country_code}` : ""}
+                </span>
+              </>
+            ) : null}
           </p>
         </div>
       </header>
@@ -300,6 +311,26 @@ export default async function LocationDetailPage({
               placeholder="Optional"
               className="mt-2 w-full rounded border border-ink/15 px-4 py-2.5 text-body text-paua focus:border-sapphire focus:outline-none focus:ring-2 focus:ring-sapphire/30"
             />
+          </div>
+          <div>
+            <label
+              htmlFor="upd-postal_code"
+              className="block font-heading text-xs uppercase tracking-[1px] text-ink/50"
+            >
+              ZIP / Postal code
+            </label>
+            <input
+              id="upd-postal_code"
+              name="postal_code"
+              type="text"
+              maxLength={16}
+              defaultValue={location.postal_code ?? ""}
+              placeholder="Optional"
+              className="mt-2 w-full rounded border border-ink/15 px-4 py-2.5 text-body text-paua focus:border-sapphire focus:outline-none focus:ring-2 focus:ring-sapphire/30"
+            />
+            <p className="mt-2 text-xs text-ink/50">
+              Used by weather zones on displays shown at this location.
+            </p>
           </div>
           <div>
             <label

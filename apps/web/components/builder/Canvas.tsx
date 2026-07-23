@@ -60,10 +60,20 @@ function ZoneContentPreview({ zone }: { zone: Zone }) {
           <span className="font-heading uppercase tracking-[1px] text-white/70">Playlist</span>
         </div>
       );
-    case "widget":
+    case "weather":
       return (
-        <div className="flex h-full w-full items-center justify-center bg-sapphire/40">
-          <span className="font-heading uppercase tracking-[1px] text-white/80">Widget</span>
+        <div className="flex h-full w-full flex-col items-center justify-center bg-cornflower/30 text-white">
+          <span className="font-heading uppercase tracking-[1px] text-white/80">Weather</span>
+          <span className="mt-1 text-xs text-white/60">Uses device location</span>
+        </div>
+      );
+    case "sports":
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-maroon/30 text-white">
+          <span className="font-heading uppercase tracking-[1px] text-white/80">Sports</span>
+          <span className="mt-1 text-xs text-white/60">
+            {c.leagues.length > 0 ? c.leagues.join(" · ") : "All leagues"}
+          </span>
         </div>
       );
     default:
