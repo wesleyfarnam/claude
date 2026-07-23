@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@drip-tv/shared"],
-  experimental: { typedRoutes: true },
+  experimental: { typedRoutes: false },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
