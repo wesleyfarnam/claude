@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/rbac";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 const DEFAULT_TZ = "America/New_York";
+const DEFAULT_COUNTRY = "US";
 const NAME_MAX = 120;
 
 type OrgCtx = {
@@ -31,14 +32,21 @@ function readLocationInput(formData: FormData): {
   name: string;
   address: string | null;
   timezone: string;
+  postal_code: string | null;
+  country_code: string;
 } {
   const name = String(formData.get("name") ?? "").trim();
   const rawAddress = String(formData.get("address") ?? "").trim();
   const rawTz = String(formData.get("timezone") ?? "").trim();
+  const rawPostal = String(formData.get("postal_code") ?? "").trim();
+  const rawCountry = String(formData.get("country_code") ?? "").trim();
   return {
     name,
     address: rawAddress.length > 0 ? rawAddress : null,
     timezone: rawTz.length > 0 ? rawTz : DEFAULT_TZ,
+    postal_code: rawPostal.length > 0 ? rawPostal : null,
+    country_code:
+      rawCountry.length > 0 ? rawCountry.toUpperCase() : DEFAULT_COUNTRY,
   };
 }
 
@@ -65,6 +73,8 @@ export async function createLocation(formData: FormData): Promise<void> {
       name: input.name,
       address: input.address,
       timezone: input.timezone,
+      postal_code: input.postal_code,
+      country_code: input.country_code,
     })
     .select("id")
     .single();
@@ -102,6 +112,8 @@ export async function updateLocation(
       name: input.name,
       address: input.address,
       timezone: input.timezone,
+      postal_code: input.postal_code,
+      country_code: input.country_code,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)

@@ -76,6 +76,26 @@ export default async function NewLocationPage({
 
           <div>
             <label
+              htmlFor="postal_code"
+              className="block font-heading text-sm uppercase tracking-[1px] text-maroon"
+            >
+              ZIP / Postal code <span className="text-ink/40">(optional)</span>
+            </label>
+            <input
+              id="postal_code"
+              name="postal_code"
+              type="text"
+              maxLength={16}
+              placeholder="11201"
+              className="mt-2 w-full rounded border border-ink/15 px-4 py-3 text-body text-paua focus:border-sapphire focus:outline-none focus:ring-2 focus:ring-sapphire/30"
+            />
+            <p className="mt-2 text-xs text-ink/50">
+              Used by weather zones on displays shown at this location.
+            </p>
+          </div>
+
+          <div>
+            <label
               htmlFor="timezone"
               className="block font-heading text-sm uppercase tracking-[1px] text-maroon"
             >
