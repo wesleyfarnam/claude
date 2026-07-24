@@ -1,5 +1,4 @@
 import { Logo } from "@/components/brand/Logo";
-import { loginAction } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -21,7 +20,7 @@ export default async function LoginPage({
             {error}
           </div>
         ) : null}
-        <form action={loginAction} className="space-y-4">
+        <form method="post" action="/api/auth/login" className="space-y-4">
           <input type="hidden" name="next" value={next ?? "/dashboard"} />
           <label className="block">
             <span className="block text-sm font-black uppercase tracking-wide text-paua">Email</span>

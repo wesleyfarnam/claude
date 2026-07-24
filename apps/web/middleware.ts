@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 const PUBLIC_PATHS = [
-  "/", "/login", "/signup", "/auth/callback",
+  "/", "/login", "/signup", "/auth/callback", "/api/auth",
   "/api/devices/heartbeat", "/api/devices/pair",
   "/api/playback-events", "/api/widgets", "/api/media/mux-webhook",
 ];

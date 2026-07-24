@@ -43,17 +43,11 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SignOut({
-  email,
-  signOut,
-}: {
-  email: string;
-  signOut: () => Promise<void>;
-}) {
+function SignOut({ email }: { email: string }) {
   return (
     <div className="border-t border-white/10 p-4 text-sm">
       <p className="truncate text-white/80">{email}</p>
-      <form action={signOut}>
+      <form method="post" action="/api/auth/signout">
         <button type="submit" className="mt-2 text-white/60 hover:text-aqua">
           Sign out
         </button>
@@ -64,11 +58,9 @@ function SignOut({
 
 export function DashboardShell({
   email,
-  signOut,
   children,
 }: {
   email: string;
-  signOut: () => Promise<void>;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -83,7 +75,7 @@ export function DashboardShell({
         <nav className="flex-1 px-3">
           <NavList />
         </nav>
-        <SignOut email={email} signOut={signOut} />
+        <SignOut email={email} />
       </aside>
 
       {/* Mobile top bar */}
@@ -126,7 +118,7 @@ export function DashboardShell({
             <nav className="flex-1 overflow-y-auto px-3">
               <NavList onNavigate={() => setOpen(false)} />
             </nav>
-            <SignOut email={email} signOut={signOut} />
+            <SignOut email={email} />
           </div>
         </div>
       ) : null}

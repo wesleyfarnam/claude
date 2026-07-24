@@ -1,5 +1,4 @@
 import { Logo } from "@/components/brand/Logo";
-import { signupAction } from "./actions";
 
 export default async function SignupPage({
   searchParams,
@@ -21,7 +20,7 @@ export default async function SignupPage({
             {error}
           </div>
         ) : null}
-        <form action={signupAction} className="space-y-4">
+        <form method="post" action="/api/auth/signup" className="space-y-4">
           <Field name="name" label="Name" type="text" />
           <Field name="email" label="Email" type="email" autoComplete="email" />
           <Field name="password" label="Password" type="password" autoComplete="new-password" minLength={8} />
