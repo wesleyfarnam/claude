@@ -314,41 +314,6 @@ export function Inspector() {
           <p className="font-heading text-xs uppercase tracking-[1px] text-paua">
             {zone.content.kind} zone
           </p>
-          <div className="grid grid-cols-2 gap-3">
-            <NumberField
-              label="X %"
-              value={zone.x}
-              min={0}
-              max={100}
-              onChange={(x) => updateZone(zone.id, { x })}
-            />
-            <NumberField
-              label="Y %"
-              value={zone.y}
-              min={0}
-              max={100}
-              onChange={(y) => updateZone(zone.id, { y })}
-            />
-            <NumberField
-              label="W %"
-              value={zone.w}
-              min={1}
-              max={100}
-              onChange={(w) => updateZone(zone.id, { w })}
-            />
-            <NumberField
-              label="H %"
-              value={zone.h}
-              min={1}
-              max={100}
-              onChange={(h) => updateZone(zone.id, { h })}
-            />
-          </div>
-          <NumberField
-            label="Z-index"
-            value={zone.z}
-            onChange={(z) => updateZone(zone.id, { z })}
-          />
           <SelectField
             label="Fit"
             value={zone.fit}
