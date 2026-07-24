@@ -34,7 +34,9 @@ async function ensureMediaBucket(): Promise<void> {
   const svc = createSupabaseServiceClient();
   const config = {
     public: false,
-    fileSizeLimit: "1024MiB",
+    // Bytes as an integer. NOTE: Supabase only accepts GB/MB/KB/B unit
+    // suffixes (not "MiB"), so a plain byte count is the safe form. 1 GiB.
+    fileSizeLimit: 1073741824,
     allowedMimeTypes: null as string[] | null,
   };
 
