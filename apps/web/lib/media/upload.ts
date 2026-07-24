@@ -23,32 +23,41 @@ export function mediaTypeFromMime(mime: string): "image" | "video" {
 }
 
 /**
- * Ensure the `media` Supabase storage bucket exists. Safe to call repeatedly.
- * First checks via listBuckets so we don't try to create on every upload;
- * if creation fails for a non-"exists" reason, throws — silent failure here
- * is the difference between "uploads work" and "uploads fail with a confusing
- * 'related resource does not exist' error downstream."
+ * Ensure the `media` Supabase storage bucket exists AND has a permissive
+ * config. Self-healing: creates it when missing, and repairs an existing
+ * bucket that was made with restrictive settings (small size limit or an
+ * image-only MIME allowlist — the usual reason video uploads fail while
+ * images succeed). MIME is left unrestricted at the bucket level; the app
+ * already gates types via {@link isAllowedMime} before signing.
  */
 async function ensureMediaBucket(): Promise<void> {
   const svc = createSupabaseServiceClient();
-  const { data: buckets, error: listErr } = await svc.storage.listBuckets();
-  if (!listErr && buckets?.some((b) => b.name === MEDIA_BUCKET)) return;
-
-  const { error } = await svc.storage.createBucket(MEDIA_BUCKET, {
+  const config = {
     public: false,
     fileSizeLimit: "1024MiB",
-    allowedMimeTypes: [...ALLOWED_MIMES],
-  });
-  if (!error) return;
-  const msg = (error.message ?? "").toLowerCase();
-  if (msg.includes("already exists") || msg.includes("duplicate") || msg.includes("exists")) {
+    allowedMimeTypes: null as string[] | null,
+  };
+
+  const { data: existing } = await svc.storage.getBucket(MEDIA_BUCKET);
+  if (existing) {
+    const { error: upErr } = await svc.storage.updateBucket(MEDIA_BUCKET, config);
+    if (upErr) console.warn(`ensureMediaBucket update: ${upErr.message}`);
     return;
   }
-  // Surface the real reason instead of letting the next call fail with
-  // "The related resource does not exist".
+
+  const { error: createErr } = await svc.storage.createBucket(MEDIA_BUCKET, config);
+  if (!createErr) return;
+
+  const msg = (createErr.message ?? "").toLowerCase();
+  if (msg.includes("exist") || msg.includes("duplicate")) {
+    // Raced with another create between get and create — repair config.
+    await svc.storage.updateBucket(MEDIA_BUCKET, config);
+    return;
+  }
   throw new Error(
-    `Could not create the 'media' Supabase Storage bucket: ${error.message}. ` +
-      `Create it manually in the Supabase dashboard (Storage → New bucket → name 'media', private, 1024 MiB).`,
+    `Could not create the 'media' storage bucket: ${createErr.message}. ` +
+      `Create it manually in Supabase (Storage → New bucket → name 'media', ` +
+      `private, 1024 MiB file size limit, no MIME-type restriction).`,
   );
 }
 
