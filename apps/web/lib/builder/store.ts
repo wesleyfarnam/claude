@@ -29,7 +29,8 @@ function newZoneId(): string {
   });
 }
 
-const DEFAULT_ZONE_SIZE = { w: 40, h: 40 };
+// New zones fill the whole canvas by default; users shrink/reposition from there.
+const DEFAULT_ZONE_SIZE = { x: 0, y: 0, w: 100, h: 100 };
 
 export const useBuilderStore = create<BuilderState>()(
   temporal(
@@ -52,8 +53,8 @@ export const useBuilderStore = create<BuilderState>()(
         set((state) => {
           const zone: Zone = {
             id: newZoneId(),
-            x: 10,
-            y: 10,
+            x: DEFAULT_ZONE_SIZE.x,
+            y: DEFAULT_ZONE_SIZE.y,
             w: DEFAULT_ZONE_SIZE.w,
             h: DEFAULT_ZONE_SIZE.h,
             z: state.display.zones.length,
