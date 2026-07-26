@@ -10,75 +10,12 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import type { Zone } from "@drip-tv/shared";
-import { useBuilderStore } from "@/lib/builder/store";
+import { useActivePage, useBuilderStore } from "@/lib/builder/store";
+import { ZoneContentPreview } from "./PageRender";
 
 function clampPct(v: number, max = 100) {
   if (!Number.isFinite(v)) return 0;
   return Math.max(0, Math.min(max, v));
-}
-
-function ZoneContentPreview({ zone }: { zone: Zone }) {
-  const c = zone.content;
-  const fitClass =
-    zone.fit === "contain"
-      ? "object-contain"
-      : zone.fit === "stretch"
-        ? "object-fill"
-        : "object-cover";
-
-  switch (c.kind) {
-    case "text":
-      return (
-        <div
-          className="flex h-full w-full items-center justify-center p-2"
-          style={{
-            color: c.color,
-            fontSize: c.fontSize,
-            textAlign: c.align,
-            justifyContent:
-              c.align === "left" ? "flex-start" : c.align === "right" ? "flex-end" : "center",
-          }}
-        >
-          <span className="break-words">{c.text || "Text"}</span>
-        </div>
-      );
-    case "clock":
-      return (
-        <div className="flex h-full w-full items-center justify-center font-display text-3xl text-white">
-          <span>00:00</span>
-        </div>
-      );
-    case "media":
-      return (
-        <div className={`flex h-full w-full items-center justify-center bg-black/40 ${fitClass}`}>
-          <span className="font-heading uppercase tracking-[1px] text-white/70">Media</span>
-        </div>
-      );
-    case "playlist":
-      return (
-        <div className="flex h-full w-full items-center justify-center bg-paua/40">
-          <span className="font-heading uppercase tracking-[1px] text-white/70">Playlist</span>
-        </div>
-      );
-    case "weather":
-      return (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-cornflower/30 text-white">
-          <span className="font-heading uppercase tracking-[1px] text-white/80">Weather</span>
-          <span className="mt-1 text-xs text-white/60">Uses device location</span>
-        </div>
-      );
-    case "sports":
-      return (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-maroon/30 text-white">
-          <span className="font-heading uppercase tracking-[1px] text-white/80">Sports</span>
-          <span className="mt-1 text-xs text-white/60">
-            {c.leagues.length > 0 ? c.leagues.join(" · ") : "All leagues"}
-          </span>
-        </div>
-      );
-    default:
-      return null;
-  }
 }
 
 function DraggableZone({
@@ -164,6 +101,7 @@ function DraggableZone({
 
 export function Canvas() {
   const display = useBuilderStore((s) => s.display);
+  const page = useActivePage();
   const selectedZoneId = useBuilderStore((s) => s.selectedZoneId);
   const selectZone = useBuilderStore((s) => s.selectZone);
   const updateZone = useBuilderStore((s) => s.updateZone);
@@ -173,11 +111,12 @@ export function Canvas() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const aspectClass = display.aspect_ratio === "9:16" ? "aspect-[9/16]" : "aspect-[16/9]";
+  const zones = page?.zones ?? [];
 
   function onDragEnd(event: DragEndEvent) {
     const zoneId = (event.active.data.current as { zoneId?: string } | undefined)?.zoneId;
     if (!zoneId) return;
-    const zone = display.zones.find((z) => z.id === zoneId);
+    const zone = zones.find((z) => z.id === zoneId);
     if (!zone) return;
     const { width, height } = containerSize;
     if (width <= 0 || height <= 0) return;
@@ -216,9 +155,9 @@ export function Canvas() {
             onLoad={measure}
             onClick={() => selectZone(null)}
             className={`relative w-full overflow-hidden rounded-lg shadow-lg ${aspectClass}`}
-            style={{ background: display.background.color }}
+            style={{ background: page?.background.color ?? "#0b0d12" }}
           >
-            {display.zones.map((zone) => (
+            {zones.map((zone) => (
               <DraggableZone
                 key={zone.id}
                 zone={zone}

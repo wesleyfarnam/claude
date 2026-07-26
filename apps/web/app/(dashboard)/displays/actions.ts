@@ -18,33 +18,42 @@ async function resolveOrgId(): Promise<{ orgId: string; supabase: Awaited<Return
   return { orgId: data.org_id as string, supabase, userId: user.id };
 }
 
+function newUuid(fallback: string): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : fallback;
+}
+
 function blankLayout(): Display {
-  const zoneId =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : "00000000-0000-0000-0000-000000000001";
   return {
     id: "00000000-0000-0000-0000-000000000000", // overwritten with row id after insert
     name: "Untitled",
     aspect_ratio: "16:9",
-    background: { color: "#0b0d12" },
-    zones: [
+    pages: [
       {
-        id: zoneId,
-        x: 0,
-        y: 0,
-        w: 100,
-        h: 100,
-        z: 0,
-        fit: "cover",
-        background: "#0b0d12",
-        content: {
-          kind: "text",
-          text: "Drag content here",
-          fontSize: 32,
-          color: "#ffffff",
-          align: "center",
-        },
+        id: newUuid("00000000-0000-0000-0000-000000000002"),
+        name: "Page 1",
+        durationSec: 10,
+        background: { color: "#0b0d12" },
+        zones: [
+          {
+            id: newUuid("00000000-0000-0000-0000-000000000001"),
+            x: 0,
+            y: 0,
+            w: 100,
+            h: 100,
+            z: 0,
+            fit: "cover",
+            background: "#0b0d12",
+            content: {
+              kind: "text",
+              text: "Drag content here",
+              fontSize: 32,
+              color: "#ffffff",
+              align: "center",
+            },
+          },
+        ],
       },
     ],
     version: 1,

@@ -63,15 +63,36 @@ export const zoneSchema = z.object({
   content: zoneContentSchema,
 });
 
+// How long a page stays on screen before the display advances to the next one.
+export const PAGE_MIN_DURATION_SEC = 1;
+export const PAGE_MAX_DURATION_SEC = 3600;
+export const PAGE_DEFAULT_DURATION_SEC = 10;
+
+// A display is an ordered deck of pages ("slides"). Each page is its own
+// full canvas of zones with its own background, and stays on screen for
+// `durationSec` before the player advances to the next page (looping).
+export const pageSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(120).default("Page"),
+  durationSec: z
+    .number()
+    .int()
+    .min(PAGE_MIN_DURATION_SEC)
+    .max(PAGE_MAX_DURATION_SEC)
+    .default(PAGE_DEFAULT_DURATION_SEC),
+  background: z.object({ color: z.string().default("#0b0d12") }).default({ color: "#0b0d12" }),
+  zones: z.array(zoneSchema).max(24),
+});
+
 export const displaySchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(120),
   aspect_ratio: aspectRatioSchema,
-  background: z.object({ color: z.string().default("#0b0d12") }).default({ color: "#0b0d12" }),
-  zones: z.array(zoneSchema).max(24),
+  pages: z.array(pageSchema).min(1).max(50),
   version: z.number().int().default(1),
 });
 
 export type ZoneContent = z.infer<typeof zoneContentSchema>;
 export type Zone = z.infer<typeof zoneSchema>;
+export type Page = z.infer<typeof pageSchema>;
 export type Display = z.infer<typeof displaySchema>;

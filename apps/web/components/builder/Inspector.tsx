@@ -1,6 +1,6 @@
 "use client";
 
-import { useBuilderStore } from "@/lib/builder/store";
+import { useActivePage, useBuilderStore } from "@/lib/builder/store";
 import { SPORTS_LEAGUES, type SportsLeague, type Zone, type ZoneContent } from "@drip-tv/shared";
 
 function NumberField({
@@ -298,11 +298,11 @@ function ContentEditor({ zone }: { zone: Zone }) {
 }
 
 export function Inspector() {
-  const display = useBuilderStore((s) => s.display);
+  const page = useActivePage();
   const selectedZoneId = useBuilderStore((s) => s.selectedZoneId);
   const updateZone = useBuilderStore((s) => s.updateZone);
   const removeZone = useBuilderStore((s) => s.removeZone);
-  const zone = selectedZoneId ? display.zones.find((z) => z.id === selectedZoneId) : null;
+  const zone = selectedZoneId ? page?.zones.find((z) => z.id === selectedZoneId) ?? null : null;
 
   return (
     <aside className="flex w-72 flex-col gap-4 overflow-y-auto border-l border-athens bg-white p-4">

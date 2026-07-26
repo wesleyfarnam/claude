@@ -7,6 +7,8 @@ import { saveDisplay } from "@/app/(dashboard)/displays/actions";
 import { Canvas } from "./Canvas";
 import { Toolbox } from "./Toolbox";
 import { Inspector } from "./Inspector";
+import { PageStrip } from "./PageStrip";
+import { PreviewModal } from "./PreviewModal";
 import type { MediaPickerItem } from "./MediaPickerModal";
 
 export function BuilderShell({
@@ -23,6 +25,7 @@ export function BuilderShell({
   const [name, setName] = useState(initialDisplay.name);
   const [aspect, setAspect] = useState<Display["aspect_ratio"]>(initialDisplay.aspect_ratio);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -89,6 +92,13 @@ export function BuilderShell({
           )}
           <button
             type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="rounded border border-sapphire px-4 py-2 font-heading text-btn uppercase tracking-[1px] text-sapphire transition hover:bg-sapphire hover:text-white"
+          >
+            Preview
+          </button>
+          <button
+            type="button"
             onClick={handleSave}
             disabled={isPending}
             className="rounded bg-sapphire px-4 py-2 font-heading text-btn uppercase tracking-[1px] text-white transition hover:bg-paua disabled:cursor-not-allowed disabled:bg-ink/40"
@@ -99,9 +109,13 @@ export function BuilderShell({
       </header>
       <div className="flex flex-1 overflow-hidden">
         <Toolbox media={media} />
-        <Canvas />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Canvas />
+          <PageStrip />
+        </div>
         <Inspector />
       </div>
+      <PreviewModal display={display} open={previewOpen} onClose={() => setPreviewOpen(false)} />
     </div>
   );
 }
