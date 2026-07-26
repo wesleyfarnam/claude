@@ -13,7 +13,7 @@ import type { DeviceCommandType } from "@drip-tv/shared";
  * the dashboard quiet.
  *
  * Owned by this file: action surface + history list. The parent device page
- * (M3) just renders <CommandPanel deviceId=... /> and is otherwise untouched.
+ * just renders <CommandPanel deviceId=... /> and is otherwise untouched.
  */
 
 type CommandStatus = "queued" | "sent" | "ack" | "failed";

@@ -2,7 +2,7 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 
 /**
- * Device JWT utilities — HS256 long-lived tokens used by Vega player sticks
+ * Device JWT utilities — HS256 long-lived tokens used by Drip TV player sticks
  * to authenticate against the Drip TV control plane (heartbeats, schedule,
  * commands). Tokens expire after 1 year; rotation happens on re-pair.
  */

@@ -70,7 +70,7 @@ export default async function DevicesPage() {
             Pair your first Signage Stick
           </h2>
           <p className="mx-auto mt-3 max-w-md text-body text-ink/70">
-            Boot the Vega player on your stick, take the 6-character code it
+            Boot the Drip TV player on your stick, take the 6-character code it
             displays, and enter it on the pairing screen.
           </p>
           <Link

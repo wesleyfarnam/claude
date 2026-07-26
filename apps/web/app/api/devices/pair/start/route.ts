@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/devices/pair/start
  *
- * Player-side bootstrap (NO auth required). The Vega stick calls this on
+ * Player-side bootstrap (NO auth required). The Drip TV player stick calls this on
  * first boot to obtain a short pairing code. The operator types the code
  * into the dashboard to claim it. The code is in-memory only.
  *

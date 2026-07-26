@@ -48,7 +48,7 @@ export default function PairDevicePage() {
 
       <div className="mx-auto max-w-xl rounded-lg bg-white p-8 shadow-sm">
         <p className="text-body text-ink/70">
-          Boot the Vega player on your Signage Stick. It will display a 6-character
+          Boot the Drip TV player on your Signage Stick. It will display a 6-character
           pairing code. Enter it below to attach the stick to your organization.
         </p>
 
