@@ -1,4 +1,10 @@
-import type { Heartbeat, PlaybackEvent, Program } from "@drip-tv/shared";
+import type {
+  Heartbeat,
+  PlaybackEvent,
+  Program,
+  SportsEvent,
+  WeatherPayload,
+} from "@drip-tv/shared";
 
 /**
  * Browser-side player client: device-credential persistence and the small set
@@ -189,5 +195,51 @@ export class UnauthorizedError extends Error {
   constructor() {
     super("Device token rejected");
     this.name = "UnauthorizedError";
+  }
+}
+
+// ── Live widget data (weather / sports) ──────────────────────────────
+
+export type SportsRow = SportsEvent & { league: string };
+export type SportsData = {
+  leagues: string[];
+  events: SportsRow[];
+  warning?: string;
+  fetched_at: string;
+  expires_at: string;
+};
+
+export type WidgetData = {
+  weather: WeatherPayload | null;
+  sports: SportsData | null;
+};
+
+export async function fetchDeviceWeather(token: string): Promise<WeatherPayload | null> {
+  try {
+    const res = await fetch("/api/devices/me/weather", {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as WeatherPayload;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchDeviceSports(
+  token: string,
+  leagues: string[],
+): Promise<SportsData | null> {
+  try {
+    const q = leagues.length > 0 ? `?leagues=${encodeURIComponent(leagues.join(","))}` : "";
+    const res = await fetch(`/api/devices/me/sports${q}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SportsData;
+  } catch {
+    return null;
   }
 }

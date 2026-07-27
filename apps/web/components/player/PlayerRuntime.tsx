@@ -5,6 +5,8 @@ import type { PlaybackEvent, Program, ProgramItem } from "@drip-tv/shared";
 import {
   ackCommand,
   cacheProgram,
+  fetchDeviceSports,
+  fetchDeviceWeather,
   fetchSchedule,
   PLAYER_VERSION,
   readCachedProgram,
@@ -13,14 +15,44 @@ import {
   UnauthorizedError,
   type DeviceCreds,
   type ScheduleCommand,
+  type WidgetData,
 } from "@/lib/player/client";
 import { PlayerPageView, type MediaUrlMap } from "./PlayerRenderer";
 
 const HEARTBEAT_MS = 30_000;
 const EVENT_FLUSH_MS = 15_000;
 const MIN_REFRESH_MS = 30_000;
+const WEATHER_REFRESH_MS = 15 * 60_000;
+const SPORTS_REFRESH_MS = 10 * 60_000;
 
 type Pos = { item: number; page: number };
+
+/** Which live widgets the program uses, and the union of sports leagues. */
+function scanWidgets(program: Program | null): {
+  hasWeather: boolean;
+  hasSports: boolean;
+  leagues: string[];
+} {
+  let hasWeather = false;
+  let hasSports = false;
+  let anyAllLeagues = false;
+  const leagues = new Set<string>();
+  for (const item of program?.items ?? []) {
+    if (item.type !== "display") continue;
+    for (const page of item.display.pages) {
+      for (const zone of page.zones) {
+        if (zone.content.kind === "weather") hasWeather = true;
+        if (zone.content.kind === "sports") {
+          hasSports = true;
+          if (zone.content.leagues.length === 0) anyAllLeagues = true;
+          else for (const l of zone.content.leagues) leagues.add(l);
+        }
+      }
+    }
+  }
+  // A zone requesting "all leagues" → send none so the endpoint uses its default set.
+  return { hasWeather, hasSports, leagues: anyAllLeagues ? [] : Array.from(leagues) };
+}
 
 function currentUnitDurationMs(program: Program, pos: Pos): number {
   const item = program.items[pos.item];
@@ -42,6 +74,7 @@ export function PlayerRuntime({
   const [program, setProgram] = useState<Program | null>(() => readCachedProgram());
   const [pos, setPos] = useState<Pos>({ item: 0, page: 0 });
   const [booting, setBooting] = useState(true);
+  const [widgets, setWidgets] = useState<WidgetData>({ weather: null, sports: null });
 
   // Refs mirror state so long-lived timers always see the latest values.
   const programRef = useRef<Program | null>(program);
@@ -58,6 +91,10 @@ export function PlayerRuntime({
     for (const m of program?.media ?? []) map[m.mediaId] = m;
     return map;
   }, [program]);
+
+  const widgetScan = useMemo(() => scanWidgets(program), [program]);
+  const { hasWeather, hasSports } = widgetScan;
+  const leaguesKey = widgetScan.leagues.join(",");
 
   const recordEvent = useCallback((item: ProgramItem, reason: string) => {
     const durationMs = Math.max(0, Date.now() - itemStartRef.current);
@@ -209,6 +246,39 @@ export function PlayerRuntime({
     };
   }, [creds.token]);
 
+  // Live weather — only polled when the program actually uses a weather zone.
+  useEffect(() => {
+    if (!hasWeather) return;
+    let cancelled = false;
+    const load = async () => {
+      const weather = await fetchDeviceWeather(creds.token);
+      if (!cancelled && weather) setWidgets((w) => ({ ...w, weather }));
+    };
+    void load();
+    const id = setInterval(load, WEATHER_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [creds.token, hasWeather]);
+
+  // Live sports — only polled when the program uses a sports zone.
+  useEffect(() => {
+    if (!hasSports) return;
+    let cancelled = false;
+    const leagues = leaguesKey ? leaguesKey.split(",") : [];
+    const load = async () => {
+      const sports = await fetchDeviceSports(creds.token, leagues);
+      if (!cancelled && sports) setWidgets((w) => ({ ...w, sports }));
+    };
+    void load();
+    const id = setInterval(load, SPORTS_REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [creds.token, hasSports, leaguesKey]);
+
   // ── Render ─────────────────────────────────────────────────────────
   if (booting && !program) {
     return (
@@ -235,7 +305,7 @@ export function PlayerRuntime({
       {item.type === "display" ? (
         (() => {
           const page = item.display.pages[Math.min(pos.page, item.display.pages.length - 1)];
-          return page ? <PlayerPageView page={page} media={mediaMap} /> : null;
+          return page ? <PlayerPageView page={page} media={mediaMap} widgets={widgets} /> : null;
         })()
       ) : item.mediaType === "video" ? (
         // eslint-disable-next-line jsx-a11y/media-has-caption
