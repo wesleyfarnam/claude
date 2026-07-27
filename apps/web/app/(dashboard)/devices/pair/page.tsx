@@ -48,8 +48,9 @@ export default function PairDevicePage() {
 
       <div className="mx-auto max-w-xl rounded-lg bg-white p-8 shadow-sm">
         <p className="text-body text-ink/70">
-          Boot the Drip TV player on your Signage Stick. It will display a 6-character
-          pairing code. Enter it below to attach the stick to your organization.
+          On your Signage Stick, open the Drip TV player at{" "}
+          <span className="font-mono text-paua">driptv.io/play</span>. It will display a
+          6-character pairing code. Enter it below to attach the stick to your organization.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-5">

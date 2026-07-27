@@ -3,10 +3,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
+// Page routes that never require a signed-in user. API routes are excluded
+// from this middleware entirely (see `config.matcher`) — every /api handler
+// authenticates itself (Supabase session for dashboard routes, device JWT for
+// player routes), so a cookie-based redirect to /login is never correct there
+// and would break device requests. `/play` is the kiosk player the Signage
+// Stick loads; it authenticates with a device token, not a cookie.
 const PUBLIC_PATHS = [
-  "/", "/login", "/signup", "/auth/callback", "/api/auth",
-  "/api/devices/heartbeat", "/api/devices/pair",
-  "/api/playback-events", "/api/widgets", "/api/media/mux-webhook",
+  "/", "/login", "/signup", "/auth/callback", "/play",
 ];
 
 export async function middleware(request: NextRequest) {
@@ -48,5 +52,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

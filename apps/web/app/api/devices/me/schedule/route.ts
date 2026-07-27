@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireDeviceFromRequest, DeviceAuthError } from "@/lib/device-auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { resolveProgramForDevice } from "@/lib/player/resolve-program";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,10 +9,10 @@ export const runtime = "nodejs";
 /**
  * GET /api/devices/me/schedule
  *
- * Device-authed. Returns the playlist the player should be running plus
- * any queued commands. The schedule resolver lands in a later milestone;
- * for now we return `playlist: null` with a 60s validity window. Pending
- * commands are surfaced so the player can ack/execute them.
+ * Device-authed. Resolves the device's active schedule into a fully-expanded
+ * `program` (ordered displays + media the player loops through), and surfaces
+ * any queued commands so the player can execute + ack them. `playlist` is kept
+ * as `null` for backward compatibility with earlier player builds.
  */
 export async function GET(req: Request) {
   let auth;
@@ -35,12 +36,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const now = new Date();
-  const valid_until = new Date(now.getTime() + 60 * 1000);
+  let program;
+  try {
+    program = await resolveProgramForDevice(auth.device);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to resolve program";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   return NextResponse.json({
     playlist: null,
-    valid_until: valid_until.toISOString(),
+    program,
+    valid_until: program.validUntil,
     commands: commands ?? [],
   });
 }

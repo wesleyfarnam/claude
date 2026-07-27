@@ -3,3 +3,4 @@ export * from "./display-schema";
 export * from "./playlist-schema";
 export * from "./command-schema";
 export * from "./widget-schema";
+export * from "./program-schema";
